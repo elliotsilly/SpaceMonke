@@ -1,40 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using HarmonyLib;
+using System;
+using System.IO;
+using BepInEx;
+using BepInEx.Configuration;
+using SpaceMonke.HarmonyPatches;
+using UnityEngine;
+using Utilla;
+using System.ComponentModel;
+using Utilla.Attributes;
 
-namespace SpaceMonke.HarmonyPatches
+namespace SpaceMonke
 {
-    [HarmonyPatch(typeof(GorillaLocomotion.Player))]
-    [HarmonyPatch("LateUpdate", MethodType.Normal)]
-    internal class JumpPatch
+    [Description("HauntedModMenu")]
+    [BepInPlugin("org.legoandmars.gorillatag.spacemonke", "Space Monke", "1.2.4")]
+    [BepInDependency("org.legoandmars.gorillatag.utilla", "1.5.0")]
+    [ModdedGamemode]
+    public class SpaceMonke : BaseUnityPlugin
     {
-        public static bool ResetSpeed = false;
-        private static void Prefix()
+        public static bool allowSpaceMonke = false;
+        public static ConfigEntry<float> multiplier;
+
+        void OnEnable()
         {
-            if (SpaceMonke.allowSpaceMonke)
-            {
-                ResetSpeed = true;
-                GorillaLocomotion.Player.Instance.jumpMultiplier = (20 * (SpaceMonke.multiplier.Value / 10));
-                GorillaLocomotion.Player.Instance.maxJumpSpeed = (20 * (SpaceMonke.multiplier.Value / 10));
-                GorillaLocomotion.Player.Instance.velocityLimit = 0.01f / (SpaceMonke.multiplier.Value / 10);
-                if(SpaceMonke.multiplier.Value == 1)
-                {
-                    GorillaLocomotion.Player.Instance.jumpMultiplier = 1.1f;
-                    GorillaLocomotion.Player.Instance.maxJumpSpeed = 6.5f;
-                    GorillaLocomotion.Player.Instance.velocityLimit = 0.3f;
-                }
-            }
-            else
-            {
-                if(ResetSpeed == true || GorillaLocomotion.Player.Instance.maxJumpSpeed == (40f * (SpaceMonke.multiplier.Value/10)))
-                {
-                    GorillaLocomotion.Player.Instance.jumpMultiplier = 1.1f;
-                    GorillaLocomotion.Player.Instance.maxJumpSpeed = 6.5f;
-                    GorillaLocomotion.Player.Instance.velocityLimit = 0.3f;
-                    ResetSpeed = false;
-                }
-            }
+            SpaceMonkePatches.ApplyHarmonyPatches();
+
+            var customFile = new ConfigFile(Path.Combine(Paths.ConfigPath, "SpaceMonke.cfg"), true);
+            multiplier = customFile.Bind("Configuration", "JumpMultiplier", 10f, "How much to multiply the jump height/distance by. 10 = 10x higher jumps");
         }
+
+        void OnDisable()
+        {
+            SpaceMonkePatches.RemoveHarmonyPatches();
+        }
+
+        [ModdedGamemodeJoin]
+        private void RoomJoined()
+		{
+            allowSpaceMonke = true;
+		}
+
+        [ModdedGamemodeLeave]
+        private void RoomLeft()
+		{
+            allowSpaceMonke = false;
+		}
     }
 }
