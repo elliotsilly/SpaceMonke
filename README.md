@@ -1,4 +1,4 @@
-# Space Monke
+# SpaceMonke ![all](https://img.shields.io/github/downloads/elliotsilly/SpaceMonke/total)
 
 A PC Gorilla Tag mod that makes your jumps super huge.
 ## Installation
